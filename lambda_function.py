@@ -66,10 +66,10 @@ def process_excel(input_buffer, filename):
     
     # Clean and prepare data
     df['CALIBRE'] = pd.to_numeric(df['CALIBRE'], errors='coerce')
-    df['CAT'] = df['CAT'].astype(str).str.strip()
-    df['CAT'] = df['CAT'].replace({'1*': 'CAT1*', 'II': 'CAT2', '2': 'CAT2'})
-    df['CAT'] = 'CAT' + df['CAT'].astype(str)
     df['CANTIDAD - Cajas'] = pd.to_numeric(df['CANTIDAD - Cajas'], errors='coerce').fillna(0)
+    
+    # Keep original CAT values for grouping
+    df['CAT'] = df['CAT'].astype(str).str.strip()
     
     # Group by size and category
     grouped = df.groupby(['CALIBRE', 'CAT'])['CANTIDAD - Cajas'].sum().reset_index()
@@ -88,6 +88,20 @@ def process_excel(input_buffer, filename):
     
     # Create pivot for categories
     category_pivot = grouped.pivot(index='CALIBRE', columns='CAT', values='CANTIDAD - Cajas').fillna(0)
+    
+    # Rename columns to match expected format
+    rename_dict = {}
+    for col in category_pivot.columns:
+        if str(col) == '1':
+            rename_dict[col] = 'CAT1'
+        elif str(col) == '1*':
+            rename_dict[col] = 'CAT1*'
+        elif str(col) in ['II', '2']:
+            rename_dict[col] = 'CAT2'
+        else:
+            rename_dict[col] = f'CAT{col}'
+    
+    category_pivot = category_pivot.rename(columns=rename_dict)
     
     # Merge summary with category breakdown
     result = size_summary.merge(category_pivot, left_on='CALIBRE', right_index=True, how='left')
