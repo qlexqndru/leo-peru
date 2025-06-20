@@ -170,12 +170,16 @@ def process_excel(input_buffer, filename):
     # Adjust column widths
     for column in worksheet.columns:
         max_length = 0
-        column_letter = column[0].column_letter
+        column_letter = None
         for cell in column:
-            if cell.value:
-                max_length = max(max_length, len(str(cell.value)))
-        adjusted_width = min(max_length + 2, 20)
-        worksheet.column_dimensions[column_letter].width = adjusted_width
+            if hasattr(cell, 'column_letter'):
+                if column_letter is None:
+                    column_letter = cell.column_letter
+                if cell.value:
+                    max_length = max(max_length, len(str(cell.value)))
+        if column_letter:
+            adjusted_width = min(max_length + 2, 20)
+            worksheet.column_dimensions[column_letter].width = adjusted_width
     
     # Add pie chart
     pie = PieChart()
