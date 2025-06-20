@@ -1,0 +1,13 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "lambda:UpdateFunctionCode",
+        "lambda:GetFunction"
+      ],
+      "Resource": "arn:aws:lambda:eu-north-1:*:function:leo-peru-process-excel"
+    }
+  ]
+}

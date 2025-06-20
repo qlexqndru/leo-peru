@@ -8,11 +8,22 @@ from openpyxl.chart import PieChart, Reference
 from openpyxl.utils import get_column_letter
 
 def lambda_handler(event, context):
+    print(f"Event: {json.dumps(event)}")
+    
     try:
         # Get file from request
+        if 'body' not in event:
+            raise ValueError("No body in request")
+            
         body = json.loads(event['body'])
+        
+        if 'file' not in body:
+            raise ValueError("No file in request body")
+            
         file_content = base64.b64decode(body['file'])
         filename = body.get('filename', 'packing_list.xlsx')
+        
+        print(f"Processing file: {filename}, size: {len(file_content)} bytes")
         
         # Process the Excel file
         output_buffer = process_excel(io.BytesIO(file_content), filename)
@@ -30,12 +41,20 @@ def lambda_handler(event, context):
             })
         }
     except Exception as e:
+        import traceback
+        error_message = f"Error: {str(e)}\nTraceback: {traceback.format_exc()}"
+        print(error_message)
+        
         return {
             'statusCode': 500,
             'headers': {
-                'Access-Control-Allow-Origin': '*'
+                'Access-Control-Allow-Origin': '*',
+                'Content-Type': 'application/json'
             },
-            'body': json.dumps({'error': str(e)})
+            'body': json.dumps({
+                'error': str(e),
+                'type': type(e).__name__
+            })
         }
 
 def process_excel(input_buffer, filename):
